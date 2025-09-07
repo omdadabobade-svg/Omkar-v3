@@ -1,0 +1,50 @@
+name: Build Omkar Apps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-customer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - name: Scaffold Flutter project (customer)
+        run: |
+          cd customer
+          flutter create . --platforms=android --project-name omkar_travels_rewards --org com.omkar --overwrite
+          cp lib/custom_main.dart lib/main.dart
+          flutter pub get
+      - name: Build Customer APK
+        run: |
+          cd customer
+          flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OmkarCustomerAPK
+          path: customer/build/app/outputs/flutter-apk/app-release.apk
+
+  build-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - name: Scaffold Flutter project (admin)
+        run: |
+          cd admin
+          flutter create . --platforms=android --project-name omkar_admin --org com.omkar --overwrite
+          flutter pub add webview_flutter
+          cp lib/custom_main.dart lib/main.dart
+          flutter pub get
+      - name: Build Admin APK
+        run: |
+          cd admin
+          flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OmkarAdminAPK
+          path: admin/build/app/outputs/flutter-apk/app-release.apk
