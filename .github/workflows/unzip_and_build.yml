@@ -1,1 +1,51 @@
-unzip_and_build.yml
+name: Unzip and Build Omkar Apps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Unzip Omkar Repo
+        run: |
+          sudo apt-get install -y unzip
+          unzip Omkar_Apps_Repo_v3.zip -d omkar_apps
+
+      - name: Build Customer App
+        run: |
+          cd omkar_apps/customer
+          flutter create . --platforms=android --overwrite
+          cp lib/custom_main.dart lib/main.dart
+          flutter build apk --release
+        continue-on-error: false
+
+      - name: Upload Customer APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: OmkarCustomerAPK
+          path: omkar_apps/customer/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Build Admin App
+        run: |
+          cd omkar_apps/admin
+          flutter create . --platforms=android --overwrite
+          flutter pub add webview_flutter
+          cp lib/custom_main.dart lib/main.dart
+          flutter build apk --release
+        continue-on-error: false
+
+      - name: Upload Admin APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: OmkarAdminAPK
+          path: omkar_apps/admin/build/app/outputs/flutter-apk/app-release.apk
