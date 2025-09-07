@@ -1,51 +1,62 @@
-name: Unzip and Build Omkar Apps
+name: Build Omkar Apps
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Run manually
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.0'
 
-      - name: Unzip Omkar Repo
+      # -----------------------
+      # Customer App
+      # -----------------------
+      - name: Create Customer Flutter project
         run: |
-          sudo apt-get install -y unzip
-          unzip Omkar_Apps_Repo_v3.zip -d omkar_apps
-
-      - name: Build Customer App
-        run: |
-          cd omkar_apps/customer
+          mkdir customer
+          cd customer
           flutter create . --platforms=android --overwrite
-          cp lib/custom_main.dart lib/main.dart
+          rm -f lib/main.dart
+          cp ../customer/lib/custom_main.dart lib/main.dart
+
+      - name: Build Customer APK
+        run: |
+          cd customer
           flutter build apk --release
-        continue-on-error: false
 
       - name: Upload Customer APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: OmkarCustomerAPK
-          path: omkar_apps/customer/build/app/outputs/flutter-apk/app-release.apk
+          path: customer/build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Build Admin App
+      # -----------------------
+      # Admin App
+      # -----------------------
+      - name: Create Admin Flutter project
         run: |
-          cd omkar_apps/admin
+          mkdir admin
+          cd admin
           flutter create . --platforms=android --overwrite
+          rm -f lib/main.dart
+          cp ../admin/lib/custom_main.dart lib/main.dart
           flutter pub add webview_flutter
-          cp lib/custom_main.dart lib/main.dart
+
+      - name: Build Admin APK
+        run: |
+          cd admin
           flutter build apk --release
-        continue-on-error: false
 
       - name: Upload Admin APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: OmkarAdminAPK
-          path: omkar_apps/admin/build/app/outputs/flutter-apk/app-release.apk
+          path: admin/build/app/outputs/flutter-apk/app-release.apk
